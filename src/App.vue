@@ -226,6 +226,11 @@ const intl = new Intl.NumberFormat("ru-RU", {
   maximumFractionDigits: 4,
 });
 
+const intl2 = new Intl.NumberFormat("ru-RU", {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
+
 const saveState = () => {
   localStorage.setItem("itemsLvl", JSON.stringify(itemsLvl.value));
   localStorage.setItem("isHunter", isHunter.value);
@@ -304,7 +309,7 @@ onUpdated(() => {
             <div
               class="border rounded px-2 h-8 flex items-center gap-2 text-sm w-16"
             >
-              {{ getEvasion(item).toFixed(2) }}%
+              {{ intl2.format(getEvasion(item)) }}%
             </div>
             <div class="flex flex-row gap-2">
               <div
