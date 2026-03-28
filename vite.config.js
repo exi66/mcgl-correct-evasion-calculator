@@ -5,7 +5,7 @@ import { defineConfig } from "vite";
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: "mcgl-correct-evasion-calculator",
+  base: "/mcgl-correct-evasion-calculator",
   plugins: [vue(), tailwindcss()],
   resolve: {
     alias: {
