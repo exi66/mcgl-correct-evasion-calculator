@@ -228,7 +228,7 @@ const chartOptions = computed(() => {
             borderDash: [6, 6],
             label: {
               display: true,
-              content: `Софт-кап (~${softCapPoint.value?.y.toFixed(2)}%)`,
+              content: `Софт-кап ~${softCapPoint.value?.y.toFixed(2)}%`,
               position: "start",
               backgroundColor: chart3,
               color: "#fff",
