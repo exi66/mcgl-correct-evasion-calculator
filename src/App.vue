@@ -1,171 +1,64 @@
 <script setup>
-import { ref, computed, onMounted, onUpdated } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Item } from "@/components/ui/item";
 import { Button } from "@/components/ui/button";
 import { Plus, Minus } from "lucide-vue-next";
+import { EvasionChart } from "@/components/ui/evasion-chart";
+import { resources, items, armorSlots } from "@/resources";
+import { intl, percentIntl } from "@/lib/utils";
 
 const isHunter = ref(true);
 const isElf = ref(false);
 const hasBuff = ref(true);
 
-const resources = {
-  bronze: {
-    name: "Бронза",
-    percent: 0.7,
-    x: -352,
-    y: -32,
-  },
-  wolfram: {
-    name: "Вольфрам",
-    percent: 1.1,
-    x: -320,
-    y: -32,
-  },
-  adamant: {
-    name: "Адамантий",
-    percent: 1.5,
-    x: -384,
-    y: -32,
-  },
-};
-
-const items = {
-  hunter: {
-    head: { x: -128, y: -288 },
-    body: { x: -128, y: -288 - 32 },
-    legs: { x: -128, y: -288 - 32 * 2 },
-    feet: { x: -128, y: -288 - 32 * 3 },
-  },
-  default: {
-    head: { x: -32, y: -288 },
-    body: { x: -32, y: -288 - 32 },
-    legs: { x: -32, y: -288 - 32 * 2 },
-    feet: { x: -32, y: -288 - 32 * 3 },
-  },
-};
-
 const currentItems = computed(() => {
   return isHunter.value ? items.hunter : items.default;
 });
 
-const itemsLvl = ref({
-  head: {
-    bronze: 0,
-    wolfram: 0,
-    adamant: 0,
-  },
-  body: {
-    bronze: 0,
-    wolfram: 0,
-    adamant: 0,
-  },
-  legs: {
-    bronze: 0,
-    wolfram: 0,
-    adamant: 0,
-  },
-  feet: {
-    bronze: 0,
-    wolfram: 0,
-    adamant: 0,
-  },
-});
-
-const headLvl = computed(() => {
-  return (
-    itemsLvl.value.head.bronze +
-    itemsLvl.value.head.wolfram +
-    itemsLvl.value.head.adamant
-  );
-});
-
-const headEvasion = computed(() => {
-  return (
-    itemsLvl.value.head.bronze * resources.bronze.percent +
-    itemsLvl.value.head.wolfram * resources.wolfram.percent +
-    itemsLvl.value.head.adamant * resources.adamant.percent
-  );
-});
-
-const bodyLvl = computed(() => {
-  return (
-    itemsLvl.value.body.bronze +
-    itemsLvl.value.body.wolfram +
-    itemsLvl.value.body.adamant
-  );
-});
-
-const bodyEvasion = computed(() => {
-  return (
-    itemsLvl.value.body.bronze * resources.bronze.percent +
-    itemsLvl.value.body.wolfram * resources.wolfram.percent +
-    itemsLvl.value.body.adamant * resources.adamant.percent
-  );
-});
-
-const legsLvl = computed(() => {
-  return (
-    itemsLvl.value.legs.bronze +
-    itemsLvl.value.legs.wolfram +
-    itemsLvl.value.legs.adamant
-  );
-});
-
-const legsEvasion = computed(() => {
-  return (
-    itemsLvl.value.legs.bronze * resources.bronze.percent +
-    itemsLvl.value.legs.wolfram * resources.wolfram.percent +
-    itemsLvl.value.legs.adamant * resources.adamant.percent
-  );
-});
-
-const feetLvl = computed(() => {
-  return (
-    itemsLvl.value.feet.bronze +
-    itemsLvl.value.feet.wolfram +
-    itemsLvl.value.feet.adamant
-  );
-});
-
-const feetEvasion = computed(() => {
-  return (
-    itemsLvl.value.feet.bronze * resources.bronze.percent +
-    itemsLvl.value.feet.wolfram * resources.wolfram.percent +
-    itemsLvl.value.feet.adamant * resources.adamant.percent
-  );
-});
-
-const getEvasion = (type) => {
-  switch (type) {
-    case "head":
-      return headEvasion.value;
-    case "body":
-      return bodyEvasion.value;
-    case "legs":
-      return legsEvasion.value;
-    case "feet":
-      return feetEvasion.value;
-    default:
-      return 0;
-  }
+const createEmptyLvl = () => {
+  const obj = {};
+  Object.keys(resources).forEach((key) => {
+    obj[key] = 0;
+  });
+  return obj;
 };
 
-const getLvl = (type) => {
-  switch (type) {
-    case "head":
-      return headLvl.value;
-    case "body":
-      return bodyLvl.value;
-    case "legs":
-      return legsLvl.value;
-    case "feet":
-      return feetLvl.value;
-    default:
-      return 0;
-  }
-};
+const itemsLvl = ref(
+  armorSlots.reduce((acc, slot) => {
+    acc[slot] = createEmptyLvl();
+    return acc;
+  }, {}),
+);
+
+const itemStats = computed(() => {
+  const stats = {};
+  const resourceKeys = Object.keys(resources);
+
+  armorSlots.forEach((slot) => {
+    const levels = itemsLvl.value[slot];
+
+    let totalLvl = 0;
+    let totalEvasion = 0;
+
+    resourceKeys.forEach((key) => {
+      const count = levels[key] || 0;
+      totalLvl += count;
+      totalEvasion += count * resources[key].percent;
+    });
+
+    stats[slot] = {
+      lvl: totalLvl,
+      evasion: totalEvasion,
+    };
+  });
+
+  return stats;
+});
+
+const getEvasion = (type) => itemStats.value[type].evasion;
+const getLvl = (type) => itemStats.value[type].lvl;
 
 const increaceItemLevel = (item, type) => {
   itemsLvl.value[item][type]++;
@@ -178,58 +71,33 @@ const decreaceItemLevel = (item, type) => {
 };
 
 const getTotalEvasion = computed(() => {
-  return (
-    headEvasion.value +
-    bodyEvasion.value +
-    legsEvasion.value +
-    feetEvasion.value
+  return Object.values(itemStats.value).reduce(
+    (sum, item) => sum + item.evasion,
+    0,
   );
 });
 
-const getBase = computed(() =>
-  Math.max(
+const calculateAgilityFromTotal = (totalEvasionValue) => {
+  const base = Math.max(
     isElf.value ? 0.5 : 0,
-    getTotalEvasion.value / 100 + (isHunter.value ? 0.65 : 0)
-  )
-);
-
-const getNextBase = (type) =>
-  Math.max(
-    isElf.value ? 0.5 : 0,
-    (getTotalEvasion.value + resources[type].percent) / 100 +
-      (isHunter.value ? 0.65 : 0)
+    totalEvasionValue / 100 + (isHunter.value ? 0.65 : 0),
   );
-const getAgility = computed(
-  () =>
+  const buff = hasBuff.value ? 0.25 : 0;
+
+  return (
     (1000 *
-      ((hasBuff.value ? 0.25 : 0) +
-        (1 - (hasBuff.value ? 0.25 : 0)) *
-          Math.min(
-            getBase.value,
-            Math.atan(getBase.value * 11) / (Math.PI / 2)
-          ))) /
+      (buff +
+        (1 - buff) * Math.min(base, Math.atan(base * 11) / (Math.PI / 2)))) /
     10
+  );
+};
+
+const getAgility = computed(() =>
+  calculateAgilityFromTotal(getTotalEvasion.value),
 );
 
 const getNextAgility = (type) =>
-  (1000 *
-    ((hasBuff.value ? 0.25 : 0) +
-      (1 - (hasBuff.value ? 0.25 : 0)) *
-        Math.min(
-          getNextBase(type),
-          Math.atan(getNextBase(type) * 11) / (Math.PI / 2)
-        ))) /
-  10;
-
-const intl = new Intl.NumberFormat("ru-RU", {
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 4,
-});
-
-const intl2 = new Intl.NumberFormat("ru-RU", {
-  minimumFractionDigits: 1,
-  maximumFractionDigits: 1,
-});
+  calculateAgilityFromTotal(getTotalEvasion.value + resources[type].percent);
 
 const saveState = () => {
   localStorage.setItem("itemsLvl", JSON.stringify(itemsLvl.value));
@@ -240,7 +108,13 @@ const saveState = () => {
 const loadState = () => {
   const savedItemsLvl = localStorage.getItem("itemsLvl");
   if (savedItemsLvl) {
-    itemsLvl.value = JSON.parse(savedItemsLvl);
+    const parsed = JSON.parse(savedItemsLvl);
+
+    armorSlots.forEach((slot) => {
+      if (parsed[slot]) {
+        itemsLvl.value[slot] = { ...createEmptyLvl(), ...parsed[slot] };
+      }
+    });
   }
   const savedIsHunter = localStorage.getItem("isHunter");
   if (savedIsHunter !== null) {
@@ -253,24 +127,27 @@ const loadState = () => {
 };
 
 const resetEquipement = () => {
-  itemsLvl.value = {
-    head: { bronze: 0, wolfram: 0, adamant: 0 },
-    body: { bronze: 0, wolfram: 0, adamant: 0 },
-    legs: { bronze: 0, wolfram: 0, adamant: 0 },
-    feet: { bronze: 0, wolfram: 0, adamant: 0 },
-  };
+  itemsLvl.value = armorSlots.reduce((acc, slot) => {
+    acc[slot] = createEmptyLvl();
+    return acc;
+  }, {});
 };
+
+watch(
+  [itemsLvl, isHunter, hasBuff],
+  () => {
+    saveState();
+  },
+  { deep: true },
+);
 
 onMounted(() => {
   loadState();
 });
-onUpdated(() => {
-  saveState();
-});
 </script>
 
 <template>
-  <div id="app" class="p-2 space-y-2">
+  <div class="p-2 space-y-2 container mx-auto">
     <fieldset class="border p-4 rounded">
       <legend class="px-2">База</legend>
       <div class="flex gap-4">
@@ -288,17 +165,14 @@ onUpdated(() => {
       <legend class="px-2">Снаряжение</legend>
       <div class="flex gap-4">
         <div class="flex flex-col gap-2">
-          <div
-            class="flex flex-row gap-2"
-            v-for="item in ['head', 'body', 'legs', 'feet']"
-          >
+          <div class="flex flex-row gap-2" v-for="item in armorSlots">
             <Item
-              :x="currentItems[item].x"
-              :y="currentItems[item].y"
+              v-if="currentItems[item]"
+              v-bind="currentItems[item]"
               class="border rounded"
             />
             <div
-              class="border rounded px-2 h-8 flex items-center gap-2 text-sm w-16"
+              class="border rounded px-2 h-8 items-center gap-2 text-sm w-16 hidden md:flex"
               :class="{
                 'text-blue-500': getLvl(item) > 6,
                 'text-red-600': getLvl(item) > 9,
@@ -307,77 +181,83 @@ onUpdated(() => {
               ур. {{ getLvl(item) }}
             </div>
             <div
-              class="border rounded px-2 h-8 flex items-center gap-2 text-sm w-16"
+              class="border rounded px-2 h-8 items-center justify-end gap-2 text-sm w-16 hidden md:flex"
             >
-              {{ intl2.format(getEvasion(item)) }}%
+              {{ percentIntl.format(getEvasion(item)) }}%
             </div>
-            <div class="flex flex-row gap-2">
-              <div
-                class="flex"
-                v-for="type in ['bronze', 'wolfram', 'adamant']"
+            <div class="flex" v-for="type in Object.keys(resources)">
+              <Button
+                variant="outline"
+                size="icon"
+                @click="decreaceItemLevel(item, type)"
+                class="border-r-0 rounded-r-none"
               >
-                <Button
-                  variant="outline"
-                  size="icon"
-                  @click="decreaceItemLevel(item, type)"
-                  class="border-r-0 rounded-r-none"
-                  ><Minus
-                /></Button>
-                <div class="relative h-8 w-8">
-                  <Item
-                    :x="resources[type].x"
-                    :y="resources[type].y"
-                    :is-armor="false"
-                    class="border"
-                  />
-                  <span
-                    class="absolute top-0 left-0 w-full h-full flex items-center justify-center select-none"
-                    >{{ itemsLvl[item][type] }}</span
-                  >
-                </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  @click="increaceItemLevel(item, type)"
-                  class="border-l-0 rounded-l-none"
-                  ><Plus
-                /></Button>
+                <Minus />
+              </Button>
+              <div class="relative h-8 w-8">
+                <Item
+                  v-if="resources[type]?.icon"
+                  v-bind="resources[type].icon"
+                  class="border"
+                />
+                <span
+                  class="absolute top-0 left-0 w-full h-full flex items-center justify-center select-none"
+                  >{{ itemsLvl[item][type] }}</span
+                >
               </div>
+              <Button
+                variant="outline"
+                size="icon"
+                @click="increaceItemLevel(item, type)"
+                class="border-l-0 rounded-l-none"
+              >
+                <Plus />
+              </Button>
             </div>
           </div>
         </div>
       </div>
       <Button @click="resetEquipement" class="mt-2" size="sm">Сбросить</Button>
     </fieldset>
-    <fieldset class="border p-4 rounded">
-      <legend class="px-2">Расчет</legend>
-      <div class="flex flex-col gap-2">
-        <span class="text-sm"
-          >Реальный уворот: {{ intl.format(getAgility) }}%</span
-        >
-        <span class="text-sm"
-          >Уворот в статах: {{ intl.format(Math.round(getAgility)) }}%</span
-        >
-        <div class="text-sm">
-          Реальная эффективность следующего улучшения:
-          <div class="flex flex-col gap-2 mt-1">
-            <div
-              v-for="type in ['bronze', 'wolfram', 'adamant']"
-              class="flex flex-row gap-1"
-            >
-              <Item
-                :x="resources[type].x"
-                :y="resources[type].y"
-                :is-armor="false"
-                class="border"
-              />
-              <div class="flex items-center">
-                {{ intl.format(getNextAgility(type) - getAgility) }}%
+    <div class="grid grid-cols-6 gap-4">
+      <fieldset class="border p-4 rounded col-span-6 lg:col-span-2">
+        <legend class="px-2">Расчет</legend>
+        <div class="flex flex-col gap-1">
+          <span class="text-sm">
+            <span>Реальный уворот:</span> {{ intl.format(getAgility) }}%
+          </span>
+          <span class="text-sm">
+            <span>Уворот в статах:</span>
+            {{ intl.format(Math.round(getAgility)) }}%
+          </span>
+          <div class="text-sm">
+            <span>КПД следующего улучшения:</span>
+            <div class="flex flex-col gap-2 mt-1">
+              <div
+                v-for="type in Object.keys(resources)"
+                class="flex flex-row gap-1"
+              >
+                <Item
+                  v-if="resources[type]?.icon"
+                  v-bind="resources[type].icon"
+                  class="border"
+                />
+                <div class="flex items-center">
+                  {{ intl.format(getNextAgility(type) - getAgility) }}%
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </fieldset>
+      </fieldset>
+      <fieldset class="border p-4 rounded col-span-6 lg:col-span-4">
+        <legend class="px-2">График</legend>
+        <EvasionChart
+          class="col-span-4"
+          :formula="calculateAgilityFromTotal"
+          :current="getTotalEvasion"
+        />
+      </fieldset>
+    </div>
   </div>
 </template>

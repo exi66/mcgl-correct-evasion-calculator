@@ -6,7 +6,7 @@ const props = defineProps({
   x: { type: Number, required: true },
   y: { type: Number, required: true },
   class: { type: null, required: false },
-  isArmor: { type: Boolean, default: true },
+  isArmor: { type: Boolean, default: false },
 });
 
 const delegatedProps = reactiveOmit(props, "class");
@@ -16,6 +16,6 @@ const delegatedProps = reactiveOmit(props, "class");
   <div
     v-bind="delegatedProps"
     :class="cn(isArmor ? 'bg-items' : 'bg-items3', props.class)"
-    :style="`background-position: ${props.x}px ${props.y}px;`"
+    :style="`background-position: ${props.x}px ${props.y}px; image-rendering: pixelated; image-rendering: crisp-edges;`"
   ></div>
 </template>
