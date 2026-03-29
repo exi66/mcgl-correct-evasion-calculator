@@ -17,6 +17,7 @@ import annotationPlugin from "chartjs-plugin-annotation";
 import { intl, percentIntl } from "@/lib/utils";
 
 const MAX_TOTAL_EVASION = 100;
+const HARD_MAX = 200;
 
 ChartJS.register(
   Title,
@@ -109,13 +110,20 @@ const chartData = computed(() => {
       let nextX = x;
       while (
         nextX + step <=
-        Math.round(Math.max(MAX_TOTAL_EVASION, props.current))
+        Math.min(
+          Math.round(Math.max(MAX_TOTAL_EVASION, props.current)),
+          HARD_MAX,
+        )
       ) {
         nextX = Number((nextX + step).toFixed(1));
         possibleX.add(nextX);
       }
     });
   });
+
+  if (props.current > HARD_MAX) {
+    possibleX.add(Number(props.current.toFixed(1)));
+  }
 
   const points = Array.from(possibleX)
     .sort((a, b) => a - b)
