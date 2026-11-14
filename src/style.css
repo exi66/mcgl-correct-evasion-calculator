@@ -120,22 +120,23 @@
   body {
     @apply bg-background text-foreground;
   }
+}
 
-  .bg-items {
-    background: url(assets/items-dmh32.png) no-repeat;
+@layer components {
+  .sprite {
+    display: inline-block;
     width: 32px;
     height: 32px;
-    background-position: -448px -448px;
-    display: inline-block;
+    background-repeat: no-repeat;
     background-size: 512px 512px;
+    image-rendering: pixelated;
   }
 
-  .bg-items3 {
-    background: url(assets/items3.png) no-repeat;
-    width: 32px;
-    height: 32px;
-    background-position: -448px -448px;
-    display: inline-block;
-    background-size: 512px 512px;
+  .sprite-armor {
+    background-image: url(assets/items-dmh32.png);
+  }
+
+  .sprite-items {
+    background-image: url(assets/items3.png);
   }
 }
