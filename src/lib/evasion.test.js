@@ -38,6 +38,47 @@ describe("calcRealEvasion", () => {
     expect(calcRealEvasion(-10, { isHunter: true })).toBeCloseTo(55);
   });
 
+  describe("точность противника (Следящее око)", () => {
+    it("снижает базу относительно: 50% → 40% при 20%", () => {
+      // База 0.5 и 0.4 ниже софт-капа, поэтому уворот равен базе.
+      expect(calcRealEvasion(50)).toBeCloseTo(50);
+      expect(calcRealEvasion(50, { enemyAccuracy: 0.2 })).toBeCloseTo(40);
+    });
+
+    it("применяется к базе до софт-капа, а не к итогу", () => {
+      const base = (0.65 + 0.4) * (1 - 0.15);
+      const expected =
+        100 * Math.min(base, Math.atan(base * 11) / (Math.PI / 2));
+      expect(
+        calcRealEvasion(40, { isHunter: true, enemyAccuracy: 0.15 }),
+      ).toBeCloseTo(expected, 10);
+    });
+
+    it("не затрагивает таблетку", () => {
+      expect(
+        calcRealEvasion(0, { hasBuff: true, enemyAccuracy: 0.2 }),
+      ).toBeCloseTo(25);
+      expect(
+        calcRealEvasion(20, { hasBuff: true, enemyAccuracy: 0.2 }),
+      ).toBeCloseTo(25 + 0.75 * 16);
+    });
+  });
+
+  it("инвентарь прибавляется к базе вне MAX", () => {
+    expect(calcRealEvasion(10, { inventoryEvasion: 5 })).toBeCloseTo(
+      calcRealEvasion(15),
+    );
+    // Отрицательный сет обнуляется в MAX(раса, ...), инвентарь всё равно добавляется.
+    expect(calcRealEvasion(-30, { inventoryEvasion: 5 })).toBeCloseTo(5);
+  });
+
+  it("дебафы умножают итог", () => {
+    const full = calcRealEvasion(20, { isHunter: true, hasBuff: true });
+    expect(
+      calcRealEvasion(20, { isHunter: true, hasBuff: true, debuff: 0.5 }),
+    ).toBeCloseTo(full / 2);
+  });
+
   it("никогда не достигает 100%", () => {
     const max = calcRealEvasion(1000, { isHunter: true, hasBuff: true });
     expect(max).toBeLessThan(100);

@@ -1,6 +1,12 @@
 import { computed } from "vue";
 import { useLocalStorage } from "@vueuse/core";
-import { armorSlots, items, resourceKeys, resources } from "@/resources";
+import {
+  armorSlots,
+  items,
+  resourceKeys,
+  resources,
+  watchingEyeLevels,
+} from "@/resources";
 import {
   calcRealEvasion,
   calcSlotStats,
@@ -44,9 +50,25 @@ export function useEquipment() {
     serializer: equipmentSerializer,
   });
 
-  const modifiers = computed(() => ({
+  /** Уровень «Следящего ока» у противника, 0 — нет. */
+  const enemyEyeLevel = useLocalStorage("enemyEyeLevel", 0);
+
+  const enemyAccuracy = computed(
+    () =>
+      watchingEyeLevels.find((eye) => eye.level === enemyEyeLevel.value)
+        ?.accuracy ?? 0,
+  );
+
+  /** Модификаторы самого персонажа: то, что видно в статах. */
+  const ownModifiers = computed(() => ({
     isHunter: isHunter.value,
     hasBuff: hasBuff.value,
+  }));
+
+  /** Модификаторы с учётом противника: то, что работает в бою. */
+  const modifiers = computed(() => ({
+    ...ownModifiers.value,
+    enemyAccuracy: enemyAccuracy.value,
   }));
 
   const armorItems = computed(() =>
@@ -63,8 +85,14 @@ export function useEquipment() {
     Object.values(slotStats.value).reduce((sum, s) => sum + s.evasion, 0),
   );
 
+  /** Уворот в бою против выбранного противника. */
   const realEvasion = computed(() =>
     calcRealEvasion(totalEvasion.value, modifiers.value),
+  );
+
+  /** Уворот без учёта противника, как в статах персонажа. */
+  const statsEvasion = computed(() =>
+    calcRealEvasion(totalEvasion.value, ownModifiers.value),
   );
 
   /** Прирост реального уворота от ещё одного улучшения каждым ресурсом. */
@@ -95,12 +123,14 @@ export function useEquipment() {
   return {
     isHunter,
     hasBuff,
+    enemyEyeLevel,
     equipment,
     modifiers,
     armorItems,
     slotStats,
     totalEvasion,
     realEvasion,
+    statsEvasion,
     nextUpgradeGain,
     increaseLevel,
     decreaseLevel,

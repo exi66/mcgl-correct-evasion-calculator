@@ -7,7 +7,12 @@ import EquipmentSlot from "@/components/EquipmentSlot.vue";
 import EvasionChart from "@/components/EvasionChart.vue";
 import { useEquipment } from "@/composables/useEquipment";
 import { useTheme } from "@/composables/useTheme";
-import { armorSlots, resourceKeys, resources } from "@/resources";
+import {
+  armorSlots,
+  resourceKeys,
+  resources,
+  watchingEyeLevels,
+} from "@/resources";
 import { intl } from "@/lib/utils";
 
 useTheme();
@@ -15,12 +20,14 @@ useTheme();
 const {
   isHunter,
   hasBuff,
+  enemyEyeLevel,
   equipment,
   modifiers,
   armorItems,
   slotStats,
   totalEvasion,
   realEvasion,
+  statsEvasion,
   nextUpgradeGain,
   increaseLevel,
   decreaseLevel,
@@ -56,6 +63,38 @@ const toggles = [
     </fieldset>
 
     <fieldset class="rounded border p-4">
+      <legend class="px-2">Противник</legend>
+      <div class="flex flex-wrap items-center gap-2">
+        <a
+          id="enemyEyeLabel"
+          href="https://forum.minecraft-galaxy.ru/wiki/1560"
+          target="_blank"
+          rel="noopener"
+          class="text-sm underline-offset-4 hover:underline"
+        >
+          Следящее око:
+        </a>
+        <div
+          role="radiogroup"
+          aria-labelledby="enemyEyeLabel"
+          class="flex flex-wrap gap-1"
+        >
+          <Button
+            v-for="eye in watchingEyeLevels"
+            :key="eye.level"
+            size="sm"
+            role="radio"
+            :aria-checked="enemyEyeLevel === eye.level"
+            :variant="enemyEyeLevel === eye.level ? 'default' : 'outline'"
+            @click="enemyEyeLevel = eye.level"
+          >
+            {{ eye.label }}
+          </Button>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="rounded border p-4">
       <legend class="px-2">Снаряжение</legend>
       <div class="flex flex-col gap-2">
         <EquipmentSlot
@@ -77,7 +116,7 @@ const toggles = [
         <div class="flex flex-col gap-1 text-sm">
           <span>Реальный уворот: {{ intl.format(realEvasion) }}%</span>
           <span>
-            Уворот в статах: {{ intl.format(Math.round(realEvasion)) }}%
+            Уворот в статах: {{ intl.format(Math.round(statsEvasion)) }}%
           </span>
           <span>КПД следующего улучшения:</span>
           <div class="mt-1 flex flex-col gap-2">

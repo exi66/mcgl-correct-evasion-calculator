@@ -19,6 +19,17 @@ export const resources = {
 
 export const resourceKeys = Object.keys(resources);
 
+/**
+ * «Следящее око» у противника: снижает базовый уворот цели на `accuracy`
+ * относительно исходного значения. https://forum.minecraft-galaxy.ru/wiki/1560
+ */
+export const watchingEyeLevels = [
+  { level: 0, label: "Нет", accuracy: 0 },
+  { level: 1, label: "I (+10%)", accuracy: 0.1 },
+  { level: 2, label: "II (+15%)", accuracy: 0.15 },
+  { level: 3, label: "III (+20%)", accuracy: 0.2 },
+];
+
 const SPRITE_SIZE = 32;
 const ARMOR_ROW_Y = -288;
 

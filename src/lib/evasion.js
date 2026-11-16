@@ -2,6 +2,8 @@ import { resourceKeys, resources } from "@/resources";
 
 /** Бонус к базе у вора (65%). */
 export const HUNTER_BONUS = 0.65;
+/** Бонус расы. Эльфа не учитываем, поэтому 0. */
+const RACE_BASE = 0;
 /** Таблетка: +25% к итоговому увороту. */
 export const BUFF_BONUS = 0.25;
 /** Крутизна кривой софт-капа. */
@@ -10,24 +12,44 @@ const SOFT_CAP_STEEPNESS = 11;
 /**
  * Реальный уворот (в процентах) по суммарному увороту на броне (в процентах).
  *
- * @param {number} armorEvasion суммарный уворот на броне, %
- * @param {{ isHunter?: boolean, hasBuff?: boolean }} [modifiers]
+ * Формула из игры:
+ *   база    = MAX(<раса>, <вор> + <сет>) + <инвентарь>
+ *   agility = (<бафы> + (1 − <бафы>) · MIN(база, ATAN(база · 11) / (π/2))) · <дебафы>
+ *
+ * Точность противника (например, «Следящее око») снижает базу цели
+ * относительно исходного значения: при 20% база 0.5 становится 0.4.
+ *
+ * @param {number} armorEvasion суммарный уворот на броне (сет), %
+ * @param {object} [modifiers]
+ * @param {boolean} [modifiers.isHunter] вор
+ * @param {boolean} [modifiers.hasBuff] таблетка
+ * @param {number} [modifiers.inventoryEvasion] уворот от предметов в инвентаре, %
+ * @param {number} [modifiers.debuff] множитель дебафов (1 — дебафов нет)
+ * @param {number} [modifiers.enemyAccuracy] точность противника, доля (0.2 = 20%)
  * @returns {number} реальный уворот, %
  */
 export function calcRealEvasion(
   armorEvasion,
-  { isHunter = false, hasBuff = false } = {},
+  {
+    isHunter = false,
+    hasBuff = false,
+    inventoryEvasion = 0,
+    debuff = 1,
+    enemyAccuracy = 0,
+  } = {},
 ) {
-  // База не уходит ниже нуля (например, при дебафах): иначе atan ниже
-  // даст ещё более отрицательное значение.
-  const base = Math.max(0, armorEvasion / 100 + (isHunter ? HUNTER_BONUS : 0));
+  const ownBase =
+    Math.max(RACE_BASE, (isHunter ? HUNTER_BONUS : 0) + armorEvasion / 100) +
+    inventoryEvasion / 100;
+  // База не уходит ниже нуля: иначе atan ниже даст ещё более отрицательное значение.
+  const base = Math.max(0, ownBase * (1 - enemyAccuracy));
   const softCapped = Math.min(
     base,
     Math.atan(base * SOFT_CAP_STEEPNESS) / (Math.PI / 2),
   );
   const buff = hasBuff ? BUFF_BONUS : 0;
 
-  return 100 * (buff + (1 - buff) * softCapped);
+  return 100 * (buff + (1 - buff) * softCapped) * debuff;
 }
 
 /** Пустые уровни улучшений одного предмета: `{ bronze: 0, wolfram: 0, ... }`. */
