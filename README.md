@@ -1,8 +1,6 @@
 # mcgl-correct-evasion-calculator
 
-Правильный калькулятор уклонения для [mcgl.ru](https://minecraft-galaxy.ru/ru/).
-
-Сайт: https://exi66.github.io/mcgl-correct-evasion-calculator/
+Правильный калькулятор уклонения для [Minecraft Galaxy](https://minecraft-galaxy.ru/ru/).
 
 ## Как считается уворот
 
@@ -40,27 +38,28 @@ I/II/III — 10/15/20%) снижает базу цели относительн�
 
 В игре в статах показывается округлённое значение, поэтому калькулятор выводит
 и точный уворот, и округлённый. Формула лежит в
-[`src/lib/evasion.js`](src/lib/evasion.js) и покрыта тестами.
+[`src/lib/evasion.ts`](src/lib/evasion.ts) и покрыта тестами.
 
 ## Разработка
 
-Нужен Node.js 20.19+ или 22.12+.
+Сделан на [exi66/starter](https://github.com/exi66/starter): Vite, React, TypeScript, Tailwind, shadcn. Нужны
+Node.js 22+ и pnpm.
 
 ```sh
-npm ci
-npm run dev       # дев-сервер
-npm run check     # линтер + проверка форматирования + тесты
-npm run format    # отформатировать код
-npm run build     # сборка в dist/
+pnpm install
+pnpm dev          # дев-сервер
+pnpm test         # тесты
+pnpm lint         # oxlint
+pnpm format       # prettier
+pnpm typecheck    # tsc
+pnpm build        # сборка в dist/
 ```
 
-Пуш в `main` собирает проект и публикует его на GitHub Pages через Actions.
-На PR запускаются только проверки и сборка.
+CI запускается на пуши и PR в `main`. Публикация на GitHub Pages — по тегу: `git tag vX.Y.Z && git push --tags`.
 
 ## Структура
 
-- `src/lib/evasion.js` — чистые функции расчёта (формула, уровни, точки графика).
-- `src/composables/useEquipment.js` — состояние калькулятора, сохраняемое в localStorage.
-- `src/composables/useTheme.js` — светлая/тёмная тема по системной настройке.
-- `src/components/` — компоненты калькулятора; `src/components/ui/` — сгенерированы shadcn-vue.
-- `src/resources.js` — ресурсы и координаты иконок в спрайтах.
+- `src/lib/evasion.ts` — чистые функции расчёта (формула, уровни, точки графика), тесты в `test/`.
+- `src/lib/resources.ts` — ресурсы, уровни «Следящего ока», координаты иконок в спрайтах.
+- `src/hooks/use-equipment.ts` — состояние калькулятора, сохраняемое в localStorage.
+- `src/components/` — компоненты калькулятора; `src/components/ui/` — сгенерированы shadcn.

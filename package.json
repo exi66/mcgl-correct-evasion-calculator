@@ -1,43 +1,53 @@
 {
   "name": "mcgl-correct-evasion-calculator",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc -b",
+    "lint": "oxlint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run lint && npm run format:check && npm test"
+    "registry:build": "shadcn build -o public/r"
   },
   "dependencies": {
-    "@vueuse/core": "^13.3.0",
-    "chart.js": "^4.5.1",
+    "@base-ui/react": "^1.9.0",
+    "@fontsource-variable/geist-mono": "^5.3.0",
+    "@tailwindcss/vite": "^4",
+    "chart.js": "^4.6.2",
     "chartjs-plugin-annotation": "^3.1.0",
     "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "lucide-vue-next": "^0.511.0",
-    "reka-ui": "^2.3.0",
-    "tailwind-merge": "^3.3.0",
-    "tw-animate-css": "^1.3.2",
-    "vue": "^3.5.13",
-    "vue-chartjs": "^5.3.3"
+    "cn": "^0.5.2",
+    "i18next": "^27.2.7",
+    "i18next-browser-languagedetector": "^8.3.1",
+    "lucide-react": "^1.79.0",
+    "react": "^19.3.1",
+    "react-chartjs-2": "^5.3.1",
+    "react-dom": "^19.3.1",
+    "react-i18next": "^18.0.3",
+    "tailwindcss": "^4",
+    "tw-animate-css": "^1.4.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@tailwindcss/vite": "^4.3.5",
-    "@vitejs/plugin-vue": "^6.0.7",
-    "eslint": "^10.15.0",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-vue": "^10.12.1",
-    "globals": "^17.14.0",
+    "@types/node": "^24",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6",
+    "oxlint": "^1.95.0",
     "prettier": "^3.10.1",
-    "tailwindcss": "^4.3.5",
-    "vite": "^8.0.16",
-    "vitest": "^5.1.0"
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "shadcn": "^4.23.0",
+    "typescript": "~6.0.2",
+    "vite": "^8",
+    "vitest": "^5.1.1"
+  },
+  "packageManager": "pnpm@12.23.0+sha512.02da94ffaf133f46074322afe552f90d40b5f71ae259aefbccdacc5085b1d617e98d65e0131f5748b9b67445978ee5055d7d59a473f1eef0d504854fefcd5975",
+  "engines": {
+    "node": ">=22"
   }
 }
